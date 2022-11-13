@@ -26,7 +26,8 @@ def bimodal_appliances(time):
     return app_list
 
 #current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
-current_appliances_list = list(bimodal_appliances(1441))
+# current_appliances_list = list(bimodal_appliances(1441))
+current_appliances_list = [15 + 40*gaussian(t, 420, 40) + 50*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
