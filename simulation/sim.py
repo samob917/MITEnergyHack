@@ -46,7 +46,7 @@ def cost_function_hvac(time, delta_t, new_house_temp, outside_temp):
         cost = 1
     elif 1321 <= time <= 1440:
         cost = -(1/120)*delta_t + 12
-    if new_house_temp > ((1/3) * outside_temp + 15):
+    if new_house_temp > calculate_comfort_temp(outside_temp):
         cost = 0
     return cost 
 
