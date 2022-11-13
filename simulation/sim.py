@@ -15,12 +15,22 @@ def gaussian(x, mu, sig):
 
 # TODO: use more sensible functions and maybe produce graphs/simulations for a few different user profiles (i.e. different lists current_appliances)
 outside_temp_list = [5 + 10*gaussian(t, 720, 200) for t in range(0,1441)]
-current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
 
+def bimodal_appliances(time):
+    app_list = []
+    for t in range(time):
+        if t < 810:
+            app_list.append(np.mean(np.random.normal(60-(abs(t-420)/8), 5, 100000)))
+        else:
+            app_list.append(np.mean(np.random.normal(80-(abs(t-1080)/8), 5, 100000)))
+    return app_list
+
+#current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
+current_appliances_list = list(bimodal_appliances(1441))
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
-    new_house_temp = house_temp + ((current_hvac * time_step)/(0.9 * house_size)) + (house_temp-outside_temp)*(-0.001 * time_step)
+    new_house_temp = house_temp + ((current_hvac * time_step)/(0.9 * house_size)) + (house_temp-outside_temp)*(-0.005 * time_step)
     return new_house_temp
 
 def calculate_comfort_temp(outside_temp):
@@ -201,11 +211,19 @@ def plot_lines(df):
 
 if __name__ == '__main__':
     # DO NOT CHANGE TIME STEP!
-    df = simulation(time_step=1, charge=0, house_temp = 16, water_temp = 55, current_hvac = 16.6, current_water=20.8, house_size=555.24, tank_size=200)
+    df = simulation(time_step=1, charge=0, house_temp = 16, water_temp = 49, current_hvac = 16.6, current_water=20.8, house_size=555.24, tank_size=200)
     print(df)
-    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp", "current_appliances"]]) 
+    
+    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp"]]) 
     # TODO: charge EV has to be put into a separate plot because the values are too large
     # TODO: plot for the currents that doesn't look awful
+    plot.set(xlabel="time(m)", ylabel="temperature(C)", title="House and Water Temp (C) over 24 hours")
     fig = plot.get_figure()
     fig.savefig("out.png")
+    fig.clf()
     df.to_csv("problem.csv")
+    df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
+    print(df["total_charge"].describe())
+    plot2 = sns.lineplot(data = df[["current_appliances", "current_ev", "current_hvac", "current_water","total_current"]])
+    fig2 = plot2.get_figure()
+    fig2.savefig("charge.png")
