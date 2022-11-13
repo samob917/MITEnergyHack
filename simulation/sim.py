@@ -227,11 +227,15 @@ if __name__ == '__main__':
     df = simulation(time_step=1, charge=0, house_temp = 16, water_temp = 49, current_hvac = 16.6, current_water=20.8, house_size=555.24, tank_size=200)
     print(df)
     df["hours"] = df["time"]/60
-    
-    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp","hours"]]) 
+    temp_data = df[["water_temp", "house_temp", "outside_temp", "comfort_temp","hours"]]
+    temp_data = temp_data.melt('hours', var_name='cols', value_name='vals')
+    plot = sns.lineplot(data=temp_data, y="vals", x="hours", hue="cols", style="cols") 
+    plot.set(xlim=(0,24),xlabel="time(H)", ylabel="temperature(C)", title="House and Water Temp (C) over 24 hours")
+    plot.legend(title='Legend', labels=["Water Temp","House Temp", "Outside Temp", "Comfort Temp"])
+
     # TODO: charge EV has to be put into a separate plot because the values are too large
-    # TODO: plot for the currents that doesn't look awful
-    plot.set(xlabel="time(m)", ylabel="temperature(C)", title="House and Water Temp (C) over 24 hours")
+    # TODO: plot for the currents that doesn't look awf
+    
     fig = plot.get_figure()
     fig.savefig("out.png")
     fig.clf()
