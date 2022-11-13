@@ -237,7 +237,7 @@ if __name__ == '__main__':
     # TODO: plot for the currents that doesn't look awf
     
     fig = plot.get_figure()
-    fig.savefig("out.png")
+    fig.savefig("metrics.png", dpi = 600)
     fig.clf()
     df.to_csv("problem.csv")
     df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     plot2.set(xlim=(0,24),xlabel="Time (H)", ylabel="Current (A)", title="Currents (A) over 24 hours")
     plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current"])
     fig2 = plot2.get_figure()
-    fig2.savefig("charge.png")
+    fig2.savefig("charge.png", dpi = 600)
 
     fig.clf()
     df["charge EV"] /= 1000
@@ -257,4 +257,4 @@ if __name__ == '__main__':
     plot3 = sns.lineplot(data=ev_charge_data, y="vals", x="hours", hue="cols", style="cols", legend = False) 
     plot3.set(xlim=(0,24),xlabel="Time (H)", ylabel="EV charge (kJ)", title="EV Charge (kJ) over 24 hours")
     fig3 = plot3.get_figure()
-    fig3.savefig("charge_ev.png")
+    fig3.savefig("charge_ev.png", dpi = 600)
