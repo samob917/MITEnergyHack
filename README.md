@@ -10,3 +10,5 @@ These functions are used in an optimization framework (in this case exhaustive s
 As exemplified in the code, more complex interactions between user load inputs and SPANs load shifting technology can be immediately incorporated. We use an intelligent general model for personal use, however it is simple to incorporate a living machine learning algorithm to estimate peak times for a person.
 
 One key benefit is that our algorithm aims to maximize convenience even in the event of a usage difference from the expected.
+
+The EV is modelled realistically as leaving the house and losing charge between 9 and 2, but these parameters are adjustable.
