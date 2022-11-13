@@ -17,7 +17,8 @@ def gaussian(x, mu, sig):
 outside_temp_list = [5 + 10*gaussian(t, 720, 200) for t in range(0,1441)]
 
 # user-controlled appliances have two peaks - morning & evening 
-current_appliances_list = [15 + 75*gaussian(t, 420, 40) + 80*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
+current_appliances_list = [15 + 40*gaussian(t, 420, 40) + 50*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
+
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
