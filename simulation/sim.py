@@ -20,9 +20,9 @@ def bimodal_appliances(time):
     app_list = []
     for t in range(time):
         if t < 810:
-            app_list.append(np.mean(np.random.normal(60-(abs(t-420)/8), 5, 100)))
+            app_list.append(np.mean(np.random.normal(90-(abs(t-420)/8), 5, 100)))
         else:
-            app_list.append(np.mean(np.random.normal(80-(abs(t-1080)/8), 5, 100)))
+            app_list.append(np.mean(np.random.normal(93-(abs(t-1080)/8), 5, 100)))
     return app_list
 
 #current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     temp_data = df[["water_temp", "house_temp", "outside_temp", "comfort_temp","hours"]]
     temp_data = temp_data.melt('hours', var_name='cols', value_name='vals')
     plot = sns.lineplot(data=temp_data, y="vals", x="hours", hue="cols", style="cols") 
-    plot.set(xlim=(0,24),xlabel="time(H)", ylabel="temperature(C)", title="House and Water Temp (C) over 24 hours")
+    plot.set(xlim=(0,24),xlabel="Time (H)", ylabel="Temperature (C)", title="House and Water Temp (C) over 24 hours")
     plot.legend(title='Legend', labels=["Water Temp","House Temp", "Outside Temp", "Comfort Temp"])
 
     # TODO: charge EV has to be put into a separate plot because the values are too large
@@ -241,8 +241,12 @@ if __name__ == '__main__':
     fig.clf()
     df.to_csv("problem.csv")
     df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
-    plot2 = sns.lineplot(data = df[["current_appliances", "current_ev", "current_hvac", "current_water","total_current"]])
-    plot2.set(xlabel="time(m)", ylabel="Current(A)", title="Currents (A) over 24 hours")
+
+    charge_data = df[["hours","current_appliances", "current_ev", "current_hvac", "current_water","total_current"]]
+    charge_data = charge_data.melt('hours', var_name='cols', value_name='vals')
+    plot2 = sns.lineplot(data = charge_data, y="vals", x="hours", hue="cols", style="cols" )
+    plot2.set(xlim=(0,24),xlabel="Time (H)", ylabel="Current (A)", title="Currents (A) over 24 hours")
+    plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current"])
     fig2 = plot2.get_figure()
     fig2.savefig("charge.png")
 
@@ -251,6 +255,6 @@ if __name__ == '__main__':
     ev_charge_data = df[["charge EV","hours"]]
     ev_charge_data = ev_charge_data.melt('hours', var_name='cols', value_name='vals')
     plot3 = sns.lineplot(data=ev_charge_data, y="vals", x="hours", hue="cols", style="cols", legend = False) 
-    plot3.set(xlim=(0,24),xlabel="time(H)", ylabel="EV charge (kJ)", title="EV Charge (kJ) over 24 hours")
+    plot3.set(xlim=(0,24),xlabel="Time (H)", ylabel="EV charge (kJ)", title="EV Charge (kJ) over 24 hours")
     fig3 = plot3.get_figure()
     fig3.savefig("charge_ev.png")
