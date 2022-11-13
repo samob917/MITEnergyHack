@@ -213,8 +213,9 @@ if __name__ == '__main__':
     # DO NOT CHANGE TIME STEP!
     df = simulation(time_step=1, charge=0, house_temp = 16, water_temp = 49, current_hvac = 16.6, current_water=20.8, house_size=555.24, tank_size=200)
     print(df)
+    df["hours"] = df["time"]/60
     
-    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp"]]) 
+    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp","hours"]]) 
     # TODO: charge EV has to be put into a separate plot because the values are too large
     # TODO: plot for the currents that doesn't look awful
     plot.set(xlabel="time(m)", ylabel="temperature(C)", title="House and Water Temp (C) over 24 hours")
@@ -224,5 +225,6 @@ if __name__ == '__main__':
     df.to_csv("problem.csv")
     df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
     plot2 = sns.lineplot(data = df[["current_appliances", "current_ev", "current_hvac", "current_water","total_current"]])
+    plot2.set(xlabel="time(m)", ylabel="Current(A)", title="Currents (A) over 24 hours")
     fig2 = plot2.get_figure()
     fig2.savefig("charge.png")
