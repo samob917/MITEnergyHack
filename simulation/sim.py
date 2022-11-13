@@ -10,16 +10,24 @@ MAX_CURRENT = 100
 MAX_CURRENT_HVAC = 16.6
 MAX_CURRENT_WATER = 20.8
 
-outside_temp = 7 # TODO: Improvement: replace this by a list to make it time-dependant
+def gaussian(x, mu, sig):
+    return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+
+# TODO: use more sensible functions and maybe produce graphs/simulations for a few different user profiles (i.e. different lists current_appliances)
+outside_temp_list = [5 + 10*gaussian(t, 720, 200) for t in range(0,1441)]
+current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
 
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
+    # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
     new_house_temp = house_temp + ((current_hvac * time_step)/(0.9 * house_size)) + (house_temp-outside_temp)*(-0.001 * time_step)
     return new_house_temp
 
+def calculate_comfort_temp(outside_temp):
+    return (1/3) * outside_temp + 15
+
 def get_delta_t_hvac(new_house_temp, outside_temp):
-    delta_t = ((1/3) * outside_temp + 15)-new_house_temp
-    return delta_t 
+    return calculate_comfort_temp(outside_temp) - new_house_temp
 
 def cost_function_hvac(time, delta_t, new_house_temp, outside_temp):
     if 0 <= time <= 240:
@@ -42,8 +50,8 @@ def cost_function_hvac(time, delta_t, new_house_temp, outside_temp):
         cost = 0
     return cost 
 
-
 def heating_function_water(time_step, water_temp, current_water, tank_size, house_temp):
+# TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
     new_water_temp = water_temp + ((current_water * time_step)/( 4.2 * tank_size)) + (water_temp-house_temp)*(-0.0002 * time_step)
     return new_water_temp
 
@@ -74,7 +82,6 @@ def cost_function_water(time, delta_t):
 
 def get_quick_cost_water(time, time_step, water_temp, current_water, tank_size, house_temp):
     new_water_temp = heating_function_water(time_step, water_temp, current_water, tank_size, house_temp)
-    # print("NWT", new_water_temp)
     delta_t_water = get_delta_t_water(new_water_temp)
     cost_water = cost_function_water(time, delta_t_water)
     return cost_water
@@ -88,20 +95,15 @@ def get_quick_cost_hvac(time, time_step, house_temp, current_hvac, house_size, o
 def find_optimal_currents(time, time_step, charge, house_temp, water_temp, tank_size, house_size, outside_temp, current_appliances):
     # if we can afford to turn both on at once, do that
     if current_appliances + MAX_CURRENT_HVAC + MAX_CURRENT_WATER <= MAX_CURRENT:
-        print("A")
         cost_water = get_quick_cost_water(time, time_step, water_temp, MAX_CURRENT_WATER, tank_size, house_temp)
         cost_hvac = get_quick_cost_hvac(time, time_step, house_temp, MAX_CURRENT_HVAC, house_size, outside_temp)
-        print("costs:\t",cost_water, cost_hvac)
         if cost_water <= 0 and cost_hvac > 0:
-            print("B")
             current_water = 0
             current_hvac = MAX_CURRENT_HVAC
         elif cost_water <= 0 and cost_hvac <= 0:
-            print("C")
             current_water = 0
             current_hvac = 0
         elif cost_water > 0 and cost_hvac <= 0:
-            print("D")
             current_water = MAX_CURRENT_WATER
             current_hvac = MAX_CURRENT_HVAC
         elif cost_water > 0 and cost_hvac > 0:
@@ -123,14 +125,10 @@ def find_optimal_currents(time, time_step, charge, house_temp, water_temp, tank_
         new_water_temp = heating_function_water(time_step, water_temp, MAX_CURRENT_WATER, tank_size, house_temp)
         delta_t_water = get_delta_t_water(new_water_temp)
         cost_water = cost_function_water(time, delta_t_water)
-        print("cc")
-        print(cost_hvac, cost_water)
-        print(house_temp, water_temp)
+        
         if cost_hvac < cost_water and cost_water > 0 :
-            print("aa")
             current_water = MAX_CURRENT_WATER
         elif cost_hvac > 0 :
-            print("bb")
             current_hvac = MAX_CURRENT_HVAC
 
     # if we can only afford to turn on the heating, do that
@@ -172,23 +170,29 @@ def update_values_that_are_not_currents(time, time_step, charge, house_temp, wat
     return (new_charge, new_house_temp, new_water_temp)
 
 
-def simulation(time_step, charge, house_temp, water_temp, current_hvac, current_water, house_size, tank_size, current_appliances):
+def simulation(time_step, charge, house_temp, water_temp, current_hvac, current_water, house_size, tank_size):
+
+    outside_temp = outside_temp_list[0]
+    current_appliances = current_appliances_list[0]
+    comfort_temp = calculate_comfort_temp(outside_temp)
 
     current_ev, current_hvac, current_water = find_optimal_currents(0, time_step, charge, house_temp, water_temp, tank_size, house_size, outside_temp, current_appliances)
-    results = [[0, current_ev, current_hvac, current_water, charge, house_temp, water_temp]]
+    results = [[0, outside_temp, comfort_temp, current_appliances, current_ev, current_hvac, current_water, charge, house_temp, water_temp]]
 
-    for t in range(0,1441):
-        print("\ntime:\t", t)
-    
-        # Update values of charge and both temperatures based on the currents of the PRECEDING timestep
+    for t in range(1,1441):
+
+        # Update values of charge and both temperatures based on the currents (and outside_temp) of the PRECEDING timestep
         charge, house_temp, water_temp = update_values_that_are_not_currents(t, time_step, charge, house_temp, water_temp, tank_size, house_size, outside_temp, current_ev, current_hvac, current_water)
     
-        # Calculate new optimum currents based on CURRENT values of charge and temperatures
+        # Calculate new optimum currents based on CURRENT values of charge and temperatures (including outside temp)
+        outside_temp = outside_temp_list[t]
+        comfort_temp = calculate_comfort_temp(outside_temp)
+        current_appliances = current_appliances_list[t]
         current_ev, current_hvac, current_water= find_optimal_currents(t, time_step, charge, house_temp, water_temp, tank_size, house_size, outside_temp, current_appliances)
     
-        results.append([t, current_ev, current_hvac, current_water, charge, house_temp, water_temp])
+        results.append([t, outside_temp, comfort_temp, current_appliances, current_ev, current_hvac, current_water, charge, house_temp, water_temp])
     
-    df = pd.DataFrame(results, columns=["time","current_ev", "current_hvac", "current_water", "charge EV", "house_temp", "water_temp"])
+    df = pd.DataFrame(results, columns=["time", "outside_temp", "comfort_temp", "current_appliances", "current_ev", "current_hvac", "current_water", "charge EV", "house_temp", "water_temp"])
     return df
 
 def plot_lines(df):
@@ -197,9 +201,11 @@ def plot_lines(df):
 
 if __name__ == '__main__':
     # DO NOT CHANGE TIME STEP!
-    df = simulation(time_step=1, charge=0, house_temp = 16,water_temp = 55, current_hvac = 16.6, current_water=20.8, house_size=555.24,tank_size=200, current_appliances=70)
+    df = simulation(time_step=1, charge=0, house_temp = 16, water_temp = 55, current_hvac = 16.6, current_water=20.8, house_size=555.24, tank_size=200)
     print(df)
-    plot = sns.lineplot(data=df[["water_temp", "house_temp", "current_ev", "current_water", "current_hvac"]]) # TODO: charge EV has to be put into a separate plot because the values are too large
+    plot = sns.lineplot(data=df[["water_temp", "house_temp", "outside_temp", "comfort_temp", "current_appliances"]]) 
+    # TODO: charge EV has to be put into a separate plot because the values are too large
+    # TODO: plot for the currents that doesn't look awful
     fig = plot.get_figure()
     fig.savefig("out.png")
     df.to_csv("problem.csv")
