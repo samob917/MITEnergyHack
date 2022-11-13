@@ -26,7 +26,8 @@ def bimodal_appliances(time):
     return app_list
 
 #current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
-current_appliances_list = list(bimodal_appliances(1441))
+# current_appliances_list = list(bimodal_appliances(1441))
+current_appliances_list = [15 + 40*gaussian(t, 420, 40) + 50*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
@@ -167,7 +168,12 @@ def find_optimal_currents(time, time_step, charge, house_temp, water_temp, tank_
     # ev current is leftover if ev not fully charged yet
     if charge < MAX_CHARGE:
         current_ev = MAX_CURRENT - (current_hvac + current_water + current_appliances)
+        # max allowed current is 36A
+        if current_ev > 36:
+            current_ev = 36
     else:
+        current_ev = 0
+    if time >= 540 and time < 840:
         current_ev = 0
     
 
@@ -176,7 +182,14 @@ def find_optimal_currents(time, time_step, charge, house_temp, water_temp, tank_
 def update_values_that_are_not_currents(time, time_step, charge, house_temp, water_temp, tank_size, house_size, outside_temp, current_ev, current_hvac, current_water):
     new_house_temp = heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp)
     new_water_temp = heating_function_water(time_step, water_temp, current_water, tank_size, house_temp)
-    new_charge = charge + current_ev * time_step
+    # if ev is in, charge it
+    if time < 540 or time >= 840:
+        new_charge = charge + current_ev * time_step
+    # else discharge it
+    else:
+        new_charge = charge - 18 * time_step
+        if new_charge < 0:
+            new_charge = 0
     return (new_charge, new_house_temp, new_water_temp)
 
 
