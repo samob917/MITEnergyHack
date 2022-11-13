@@ -248,4 +248,4 @@ if __name__ == '__main__':
     plot2.set(xlim=(0,24),xlabel="Time (H)", ylabel="Current (A)", title="Currents (A) over 24 hours")
     plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current"])
     fig2 = plot2.get_figure()
-    fig2.savefig("charge.png")
+    fig2.savefig("charge.png", dpi=800)
