@@ -20,9 +20,9 @@ def bimodal_appliances(time):
     app_list = []
     for t in range(time):
         if t < 810:
-            app_list.append(np.mean(np.random.normal(60-(abs(t-420)/8), 5, 100000)))
+            app_list.append(np.mean(np.random.normal(60-(abs(t-420)/8), 5, 100)))
         else:
-            app_list.append(np.mean(np.random.normal(80-(abs(t-1080)/8), 5, 100000)))
+            app_list.append(np.mean(np.random.normal(80-(abs(t-1080)/8), 5, 100)))
     return app_list
 
 #current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
@@ -223,7 +223,6 @@ if __name__ == '__main__':
     fig.clf()
     df.to_csv("problem.csv")
     df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
-    print(df["total_charge"].describe())
     plot2 = sns.lineplot(data = df[["current_appliances", "current_ev", "current_hvac", "current_water","total_current"]])
     fig2 = plot2.get_figure()
     fig2.savefig("charge.png")
