@@ -16,18 +16,9 @@ def gaussian(x, mu, sig):
 # TODO: use more sensible functions and maybe produce graphs/simulations for a few different user profiles (i.e. different lists current_appliances)
 outside_temp_list = [5 + 10*gaussian(t, 720, 200) for t in range(0,1441)]
 
-def bimodal_appliances(time):
-    app_list = []
-    for t in range(time):
-        if t < 810:
-            app_list.append(np.mean(np.random.normal(90-(abs(t-420)/8), 5, 100)))
-        else:
-            app_list.append(np.mean(np.random.normal(93-(abs(t-1080)/8), 5, 100)))
-    return app_list
+# user-controlled appliances have two peaks - morning & evening 
+current_appliances_list = [15 + 40*gaussian(t, 420, 40) + 50*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
 
-#current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
-# current_appliances_list = list(bimodal_appliances(1441))
-current_appliances_list = [15 + 75*gaussian(t, 420, 40) + 80*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
@@ -249,7 +240,7 @@ if __name__ == '__main__':
     plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current","Total Current"])
     #sns.move_legend(plot2, "upper left", bbox_to_anchor=(1, 1))
     fig2 = plot2.get_figure()
-    fig2.savefig("charge.png", dpi = 600)
+    fig2.savefig("currents.png", dpi = 600)
 
     fig.clf()
     df["charge EV"] /= 1000
