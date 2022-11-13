@@ -27,7 +27,7 @@ def bimodal_appliances(time):
 
 #current_appliances_list = [50 + 20 * np.sin(t / 200) + np.random.randint(5) for t in range(0,1441)]
 # current_appliances_list = list(bimodal_appliances(1441))
-current_appliances_list = [15 + 50*gaussian(t, 420, 40) + 65*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
+current_appliances_list = [15 + 75*gaussian(t, 420, 40) + 80*gaussian(t, 1100, 100) + np.random.randint(3) for t in range(0,1441)]
 # The following three functions get the housetemp, change in t, and cost as a result
 def heating_function_hvac(time,time_step, house_temp, current_hvac, house_size, outside_temp):
     # TODO: The parameters have to be chosen more realistically (I just sorta picked them at random). If that's too hard, then let's at least push our model to its limits.
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     # TODO: plot for the currents that doesn't look awf
     
     fig = plot.get_figure()
-    fig.savefig("out.png")
+    fig.savefig("metrics.png", dpi = 600)
     fig.clf()
     df.to_csv("problem.csv")
     df["total_current"] = df["current_appliances"] + df["current_hvac"] + df["current_ev"] + df["current_water"]
@@ -246,6 +246,16 @@ if __name__ == '__main__':
     charge_data = charge_data.melt('hours', var_name='cols', value_name='vals')
     plot2 = sns.lineplot(data = charge_data, y="vals", x="hours", hue="cols", style="cols" )
     plot2.set(xlim=(0,24),xlabel="Time (H)", ylabel="Current (A)", title="Currents (A) over 24 hours")
-    plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current"])
+    plot2.legend(title='Legend', labels=["Appliance Current","EV Current", "HVAC Current", "Water Current","Total Current"])
+    #sns.move_legend(plot2, "upper left", bbox_to_anchor=(1, 1))
     fig2 = plot2.get_figure()
-    fig2.savefig("charge.png", dpi=800)
+    fig2.savefig("charge.png", dpi = 600)
+
+    fig.clf()
+    df["charge EV"] /= 1000
+    ev_charge_data = df[["charge EV","hours"]]
+    ev_charge_data = ev_charge_data.melt('hours', var_name='cols', value_name='vals')
+    plot3 = sns.lineplot(data=ev_charge_data, y="vals", x="hours", hue="cols", style="cols", legend = False) 
+    plot3.set(xlim=(0,24),xlabel="Time (H)", ylabel="EV charge (kJ)", title="EV Charge (kJ) over 24 hours")
+    fig3 = plot3.get_figure()
+    fig3.savefig("charge_ev.png", dpi = 600)
